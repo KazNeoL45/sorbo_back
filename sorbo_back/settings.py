@@ -33,7 +33,7 @@ SECRET_KEY = 'django-insecure-(9p27rtynz&4&v_0_x=_ldw8s7r)2vqnzp+(5$yv_kux@7bnew
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['74.208.205.30', 'localhost', '127.0.0.1', '.localhost', '[::1]']
+ALLOWED_HOSTS = ['74.208.205.30', 'localhost', '127.0.0.1', '.localhost', '[::1]', 'ip74-208-205-30.pbiaas.com']
 
 
 # Application definition
@@ -173,28 +173,8 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = True  # Only for development
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for development
 CORS_ALLOW_CREDENTIALS = True
-
-# Additional CORS settings for frontend development
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React default port
-    "http://localhost:4200",  # Angular default port
-    "http://localhost:8080",  # Vue default port
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:4200",
-    "http://127.0.0.1:8080",
-    "http://localhost:5173",  # Vite default port
-    "http://127.0.0.1:5173",
-    "https://sorbo-mx.com",  # Production domain
-    "http://sorbo-mx.com",   # Production domain (HTTP)
-]
-
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^http://localhost:\d+$",
-    r"^http://127.0.0.1:\d+$",
-    r"^https?://sorbo-mx\.com$",  # Production domain with optional protocol
-]
 
 CORS_ALLOW_METHODS = [
     'DELETE',
