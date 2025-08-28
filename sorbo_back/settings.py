@@ -11,6 +11,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -129,7 +137,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'api.authentication.OptionalJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -211,6 +219,25 @@ HARDCODED_USERNAME = "s0rb0mx24"
 HARDCODED_PASSWORD = "s0rb0s0rb1t0"
 
 # Stripe Configuration
-STRIPE_PUBLISHABLE_KEY = 'your_stripe_publishable_key'  # Replace with your actual key
-STRIPE_SECRET_KEY = 'your_stripe_secret_key'  # Replace with your actual key
-STRIPE_WEBHOOK_SECRET = 'your_stripe_webhook_secret'  # Replace with your actual webhook secret
+import os
+
+# Production Stripe Keys - Direct assignment for immediate use
+STRIPE_PUBLISHABLE_KEY = 'pk_live_51RwX1ZD5cS3MsYULZSr3llAYXLKnKilkngejZwXl2dsIcU6qDpA2C5AMb1X6ciq2WoJQLxEo9UBlZhuHPiOkchul00jygswABE'
+STRIPE_SECRET_KEY = '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'
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_your_production_webhook_secret_here')
+
+# For security, you can also set these as environment variables:
+# export STRIPE_PUBLISHABLE_KEY="pk_live_51RwX1ZD5cS3MsYULZSr3llAYXLKnKilkngejZwXl2dsIcU6qDpA2C5AMb1X6ciq2WoJQLxEo9UBlZhuHPiOkchul00jygswABE"
+# export STRIPE_SECRET_KEY="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"
+
+# For security, you can also set these as environment variables:
+# export STRIPE_PUBLISHABLE_KEY="pk_live_51RwX1ZD5cS3MsYULZSr3llAYXLKnKilkngejZwXl2dsIcU6qDpA2C5AMb1X6ciq2WoJQLxEo9UBlZhuHPiOkchul00jygswABE"
+# export STRIPE_SECRET_KEY="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"
+
+# Stripe settings
+STRIPE_CURRENCY = 'usd'  # Default currency
+STRIPE_SUCCESS_URL = 'http://localhost:3000/success'  # Frontend success page
+STRIPE_CANCEL_URL = 'http://localhost:3000/cancel'    # Frontend cancel page
+
+# Frontend Configuration
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:4200')  # Angular default port

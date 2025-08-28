@@ -63,8 +63,8 @@ curl -X POST http://localhost:8000/api/products/ \
     "description": "This is a sample product description",
     "stock": 10,
     "type": "electronics",
-    "price_cents": 2999,
-    "currency": "USD"
+    "price_pesos": "299.99",
+    "currency": "MXN"
   }'
 ```
 
@@ -79,8 +79,8 @@ curl -X PUT http://localhost:8000/api/products/550e8400-e29b-41d4-a716-446655440
     "description": "Updated product description",
     "stock": 15,
     "type": "electronics",
-    "price_cents": 3499,
-    "currency": "USD"
+    "price_pesos": "349.99",
+    "currency": "MXN"
   }'
 ```
 
@@ -98,13 +98,12 @@ curl -X DELETE http://localhost:8000/api/products/550e8400-e29b-41d4-a716-446655
 ```bash
 curl -X POST http://localhost:8000/api/orders/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "product_id": "550e8400-e29b-41d4-a716-446655440000",
-    "buyer_full_name": "John Doe",
-    "buyer_address": "123 Main Street, City, Country",
-    "total_cents": 2999,
-    "currency": "USD"
+    "client_name": "John Doe",
+    "client_email": "john.doe@example.com",
+    "client_phone": "+1234567890",
+    "client_address": "123 Main Street, City, Country"
   }'
 ```
 
@@ -195,8 +194,8 @@ PRODUCT_RESPONSE=$(curl -s -X POST http://localhost:8000/api/products/ \
     "description": "A test product",
     "stock": 10,
     "type": "test",
-    "price_cents": 1999,
-    "currency": "USD"
+    "price_pesos": "199.99",
+    "currency": "MXN"
   }')
 
 PRODUCT_ID=$(echo $PRODUCT_RESPONSE | jq -r '.id')
@@ -205,13 +204,12 @@ echo "Created product: $PRODUCT_ID"
 # 3. Create an order
 ORDER_RESPONSE=$(curl -s -X POST http://localhost:8000/api/orders/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
   -d "{
     \"product_id\": \"$PRODUCT_ID\",
-    \"buyer_full_name\": \"Test User\",
-    \"buyer_address\": \"123 Test St\",
-    \"total_cents\": 1999,
-    \"currency\": \"USD\"
+    \"client_name\": \"Test User\",
+    \"client_email\": \"test@example.com\",
+    \"client_phone\": \"+1234567890\",
+    \"client_address\": \"123 Test St\"
   }")
 
 ORDER_ID=$(echo $ORDER_RESPONSE | jq -r '.order_id')
@@ -248,13 +246,18 @@ curl -s -X GET http://localhost:8000/api/orders/$ORDER_ID/status/ \
 
 1. **Base64 Images**: The `picture` field expects base64-encoded images with the format: `data:image/jpeg;base64,<base64_string>`
 
-2. **Stripe Integration**: For full Stripe functionality, you need to:
+2. **Price Format**: All prices are in **pesos (MXN)** format:
+   - Use `price_pesos` field with decimal values (e.g., `"299.99"` for $299.99 MXN)
+   - The system automatically converts pesos to cents for Stripe integration
+   - Minimum amount is $10.00 MXN (1000 cents)
+
+3. **Stripe Integration**: For full Stripe functionality, you need to:
    - Configure valid Stripe API keys in `settings.py`
    - Set up webhook endpoints in your Stripe dashboard
    - Use HTTPS in production for webhook security
 
-3. **CORS**: The API is configured to allow all origins in development. For production, configure specific allowed origins.
+4. **CORS**: The API is configured to allow all origins in development. For production, configure specific allowed origins.
 
-4. **Authentication**: The hardcoded credentials are for development only. In production, implement proper user authentication.
+5. **Authentication**: The hardcoded credentials are for development only. In production, implement proper user authentication.
 
-5. **Database**: The project uses SQLite by default. For production, consider using PostgreSQL.
+6. **Database**: The project uses SQLite by default. For production, consider using PostgreSQL.

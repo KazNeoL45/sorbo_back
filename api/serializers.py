@@ -9,7 +9,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'picture', 'name', 'description', 'stock', 
-            'type', 'price_cents', 'currency', 'created_at', 'updated_at'
+            'type', 'price_pesos', 'currency', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
@@ -34,7 +34,7 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'picture', 'name', 'description', 'stock', 
-            'type', 'price_cents', 'currency'
+            'type', 'price_pesos', 'currency'
         ]
     
     def validate_picture(self, value):
@@ -69,8 +69,8 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'product', 'product_id', 'buyer_full_name', 'buyer_address',
-            'stripe_session_id', 'status', 'total_cents', 'currency',
+            'id', 'product', 'product_id', 'client_name', 'client_email', 'client_phone', 'client_address',
+            'stripe_session_id', 'status', 'total_pesos', 'currency',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'stripe_session_id', 'status', 'created_at', 'updated_at']
@@ -91,8 +91,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'product_id', 'buyer_full_name', 'buyer_address',
-            'total_cents', 'currency'
+            'product_id', 'client_name', 'client_email', 'client_phone', 'client_address'
         ]
 
     def validate_product_id(self, value):
@@ -101,3 +100,34 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             return value
         except Product.DoesNotExist:
             raise serializers.ValidationError("Product not found")
+    
+    def validate(self, data):
+        """
+        Validate order data and set total_pesos and currency from product
+        """
+        product_id = data.get('product_id')
+        if product_id:
+            try:
+                product = Product.objects.get(id=product_id)
+                
+                # Check if product has sufficient stock
+                if product.stock <= 0:
+                    raise serializers.ValidationError(
+                        f"Product '{product.name}' is out of stock. Available stock: {product.stock}"
+                    )
+                
+                # Set total_pesos and currency from product
+                data['total_pesos'] = product.price_pesos
+                data['currency'] = product.currency
+                
+                # Check if amount meets Stripe minimum requirements (convert to cents for validation)
+                price_cents = int(float(product.price_pesos) * 100)
+                if product.currency.upper() == 'MXN' and price_cents < 1000:
+                    raise serializers.ValidationError(
+                        f"Amount must be at least $10.00 MXN. Current amount: ${product.price_pesos} MXN"
+                    )
+                
+            except Product.DoesNotExist:
+                raise serializers.ValidationError("Product not found")
+        
+        return data
