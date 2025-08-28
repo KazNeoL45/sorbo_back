@@ -59,16 +59,28 @@ sorbo_back/
    ```
 
 5. **Configure Stripe (required for payments)**
-   Edit `sorbo_back/settings.py` and update:
-   ```python
-   STRIPE_PUBLISHABLE_KEY = 'your_stripe_publishable_key'
-   STRIPE_SECRET_KEY = 'your_stripe_secret_key'
-   STRIPE_WEBHOOK_SECRET = 'your_stripe_webhook_secret'
+   
+   **Quick Setup:**
+   - Create a `.env` file in the project root
+   - Add your Stripe keys (see `STRIPE_SETUP.md` for detailed instructions)
+   
+   ```bash
+   # .env file
+   STRIPE_PUBLISHABLE_KEY=pk_test_your_test_publishable_key_here
+   STRIPE_SECRET_KEY=sk_test_your_test_secret_key_here
+   STRIPE_WEBHOOK_SECRET=whsec_your_test_webhook_secret_here
    ```
+   
+   **For detailed Stripe setup instructions, see:** `STRIPE_SETUP.md`
 
 6. **Start the development server**
    ```bash
    python manage.py runserver
+   ```
+
+7. **Test your setup**
+   ```bash
+   python test_stripe_setup.py
    ```
 
 ## API Endpoints
