@@ -14,6 +14,9 @@ from .serializers import ProductSerializer, ProductCreateUpdateSerializer, Order
 from .permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 import time
 import uuid
+import hashlib
+import base64
+import json
 
 
 def reduce_product_stock(product, quantity=1):
@@ -43,60 +46,52 @@ class OrderPagination(PageNumberPagination):
 
 class LoginView(APIView):
     """
-    Hardcoded authentication view that returns JWT tokens
+    Hardcoded authentication view that returns simple tokens
     """
     permission_classes = [permissions.AllowAny]
-    
+
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
-        
-        if (username == settings.HARDCODED_USERNAME and 
+
+        if (username == settings.HARDCODED_USERNAME and
             password == settings.HARDCODED_PASSWORD):
-            
-            # Create a dummy user for JWT token generation
+
+            # Create a dummy user for token generation
             from django.contrib.auth.models import User
             user, created = User.objects.get_or_create(
                 username=username,
                 defaults={'is_staff': True, 'is_superuser': True}
             )
+
+            # Generate simple tokens without using JWT library
+            timestamp = int(time.time())
             
-            # Generate JWT tokens using a more robust approach
-            try:
-                # Try to get tokens directly from the backend to avoid PyJWT version issues
-                from rest_framework_simplejwt.state import token_backend
-                
-                # Create token payloads manually
-                access_token_payload = {
-                    'token_type': 'access',
-                    'exp': int(time.time()) + 3600,  # 1 hour
-                    'jti': str(uuid.uuid4()),
-                    'user_id': user.id
-                }
-                
-                refresh_token_payload = {
-                    'token_type': 'refresh',
-                    'exp': int(time.time()) + 86400,  # 24 hours
-                    'jti': str(uuid.uuid4()),
-                    'user_id': user.id
-                }
-                
-                # Encode tokens directly
-                access_token_str = token_backend.encode(access_token_payload)
-                refresh_token_str = token_backend.encode(refresh_token_payload)
-                
-            except Exception as e:
-                # Fallback to the original method with better error handling
-                try:
-                    refresh = RefreshToken.for_user(user)
-                    access_token_str = str(refresh.access_token)
-                    refresh_token_str = str(refresh)
-                except AttributeError:
-                    # If that fails, try the encode/decode approach
-                    refresh = RefreshToken.for_user(user)
-                    access_token_str = str(refresh.access_token).encode('utf-8').decode('utf-8')
-                    refresh_token_str = str(refresh).encode('utf-8').decode('utf-8')
+            # Create access token payload
+            access_payload = {
+                'user_id': user.id,
+                'username': user.username,
+                'exp': timestamp + 3600,  # 1 hour
+                'type': 'access'
+            }
             
+            # Create refresh token payload
+            refresh_payload = {
+                'user_id': user.id,
+                'username': user.username,
+                'exp': timestamp + 86400,  # 24 hours
+                'type': 'refresh'
+            }
+            
+            # Encode tokens as base64 strings
+            access_token_str = base64.b64encode(
+                json.dumps(access_payload).encode('utf-8')
+            ).decode('utf-8')
+            
+            refresh_token_str = base64.b64encode(
+                json.dumps(refresh_payload).encode('utf-8')
+            ).decode('utf-8')
+
             return Response({
                 'access_token': access_token_str,
                 'refresh_token': refresh_token_str,
@@ -105,7 +100,7 @@ class LoginView(APIView):
                     'is_staff': user.is_staff
                 }
             })
-        
+
         return Response(
             {'error': 'Invalid credentials'},
             status=status.HTTP_401_UNAUTHORIZED
