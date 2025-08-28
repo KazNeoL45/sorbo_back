@@ -12,6 +12,8 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Product, Order
 from .serializers import ProductSerializer, ProductCreateUpdateSerializer, OrderSerializer, OrderCreateSerializer
 from .permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+import time
+import uuid
 
 
 def reduce_product_stock(product, quantity=1):
@@ -59,18 +61,41 @@ class LoginView(APIView):
                 defaults={'is_staff': True, 'is_superuser': True}
             )
             
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            
-            # Convert tokens to strings explicitly, handling PyJWT version differences
+            # Generate JWT tokens using a more robust approach
             try:
-                # For newer PyJWT versions that return strings directly
-                access_token_str = str(refresh.access_token)
-                refresh_token_str = str(refresh)
-            except AttributeError:
-                # For older PyJWT versions that return bytes
-                access_token_str = str(refresh.access_token).encode('utf-8').decode('utf-8')
-                refresh_token_str = str(refresh).encode('utf-8').decode('utf-8')
+                # Try to get tokens directly from the backend to avoid PyJWT version issues
+                from rest_framework_simplejwt.state import token_backend
+                
+                # Create token payloads manually
+                access_token_payload = {
+                    'token_type': 'access',
+                    'exp': int(time.time()) + 3600,  # 1 hour
+                    'jti': str(uuid.uuid4()),
+                    'user_id': user.id
+                }
+                
+                refresh_token_payload = {
+                    'token_type': 'refresh',
+                    'exp': int(time.time()) + 86400,  # 24 hours
+                    'jti': str(uuid.uuid4()),
+                    'user_id': user.id
+                }
+                
+                # Encode tokens directly
+                access_token_str = token_backend.encode(access_token_payload)
+                refresh_token_str = token_backend.encode(refresh_token_payload)
+                
+            except Exception as e:
+                # Fallback to the original method with better error handling
+                try:
+                    refresh = RefreshToken.for_user(user)
+                    access_token_str = str(refresh.access_token)
+                    refresh_token_str = str(refresh)
+                except AttributeError:
+                    # If that fails, try the encode/decode approach
+                    refresh = RefreshToken.for_user(user)
+                    access_token_str = str(refresh.access_token).encode('utf-8').decode('utf-8')
+                    refresh_token_str = str(refresh).encode('utf-8').decode('utf-8')
             
             return Response({
                 'access_token': access_token_str,
