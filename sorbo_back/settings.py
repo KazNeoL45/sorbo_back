@@ -186,11 +186,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080",
     "http://localhost:5173",  # Vite default port
     "http://127.0.0.1:5173",
+    "https://sorbo-mx.com",  # Production domain
+    "http://sorbo-mx.com",   # Production domain (HTTP)
 ]
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://localhost:\d+$",
     r"^http://127.0.0.1:\d+$",
+    r"^https?://sorbo-mx\.com$",  # Production domain with optional protocol
 ]
 
 CORS_ALLOW_METHODS = [
@@ -240,4 +243,4 @@ STRIPE_SUCCESS_URL = 'http://localhost:3000/success'  # Frontend success page
 STRIPE_CANCEL_URL = 'http://localhost:3000/cancel'    # Frontend cancel page
 
 # Frontend Configuration
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:4200')  # Angular default port
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://sorbo-mx.com')  # Production domain
