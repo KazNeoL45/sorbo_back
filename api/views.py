@@ -107,6 +107,7 @@ class LoginView(APIView):
         )
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ProductViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Product CRUD operations
@@ -149,8 +150,20 @@ class ProductViewSet(viewsets.ModelViewSet):
         Public endpoint to retrieve a specific product
         """
         return super().retrieve(request, *args, **kwargs)
+    
+    def options(self, request, *args, **kwargs):
+        """
+        Handle OPTIONS requests for CORS preflight
+        """
+        response = Response()
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin"
+        response["Access-Control-Max-Age"] = "86400"
+        return response
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class OrderViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Order operations
@@ -495,6 +508,17 @@ class OrderViewSet(viewsets.ModelViewSet):
                 {'error': 'Order not found'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+    
+    def options(self, request, *args, **kwargs):
+        """
+        Handle OPTIONS requests for CORS preflight
+        """
+        response = Response()
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin"
+        response["Access-Control-Max-Age"] = "86400"
+        return response
 
 
 @method_decorator(csrf_exempt, name='dispatch')
