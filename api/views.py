@@ -62,9 +62,15 @@ class LoginView(APIView):
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
             
-            # Convert tokens to strings explicitly
-            access_token_str = str(refresh.access_token)
-            refresh_token_str = str(refresh)
+            # Convert tokens to strings explicitly, handling PyJWT version differences
+            try:
+                # For newer PyJWT versions that return strings directly
+                access_token_str = str(refresh.access_token)
+                refresh_token_str = str(refresh)
+            except AttributeError:
+                # For older PyJWT versions that return bytes
+                access_token_str = str(refresh.access_token).encode('utf-8').decode('utf-8')
+                refresh_token_str = str(refresh).encode('utf-8').decode('utf-8')
             
             return Response({
                 'access_token': access_token_str,
@@ -76,7 +82,7 @@ class LoginView(APIView):
             })
         
         return Response(
-            {'error': 'Invalid credentials'}, 
+            {'error': 'Invalid credentials'},
             status=status.HTTP_401_UNAUTHORIZED
         )
 
