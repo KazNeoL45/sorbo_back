@@ -1,5 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
 from .views import (
     LoginView, ProductViewSet, OrderViewSet, 
     StripeWebhookView, OrderSuccessView, OrderCancelView, CORSTestView
@@ -10,7 +12,22 @@ router = DefaultRouter()
 router.register(r'products', ProductViewSet)
 router.register(r'orders', OrderViewSet)
 
+def cors_options(request):
+    """
+    Handle OPTIONS requests for CORS preflight
+    """
+    response = HttpResponse()
+    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin"
+    response["Access-Control-Max-Age"] = "86400"
+    return response
+
 urlpatterns = [
+    # CORS preflight handler - must come before router
+    path('products/', csrf_exempt(cors_options), name='cors-products'),
+    path('orders/', csrf_exempt(cors_options), name='cors-orders'),
+    
     # Authentication
     path('login/', LoginView.as_view(), name='login'),
     
